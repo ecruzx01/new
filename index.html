@@ -189,16 +189,29 @@
       box-shadow: 0 0 0 3px rgba(61,108,219,0.12);
     }
 
-    /* Quick Tiles */
+    /* Quick Tiles with visible scrollbar */
     .quick-tiles {
       display: flex;
       gap: 10px;
       overflow-x: auto;
       padding-bottom: 12px;
       margin-bottom: 16px;
-      scrollbar-width: none; /* Firefox */
     }
-    .quick-tiles::-webkit-scrollbar { display: none; } /* Chrome */
+
+    .quick-tiles::-webkit-scrollbar {
+      height: 6px;
+    }
+    .quick-tiles::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+    }
+    .quick-tiles::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+    .quick-tiles::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
 
     .quick-tile {
       background: var(--surface);
@@ -520,21 +533,98 @@
   const allCategories = [
     { name: "Auto & Transport:Car Insurance", emoji: "🚗", type: "default" },
     { name: "Auto & Transport:Gas & Fuel", emoji: "⛽", type: "gas" },
-    { name: "Dining & Drinks:Restaurants", emoji: "🍽️", type: "dining" },
+    { name: "Auto & Transport:Parking", emoji: "🅿️", type: "default" },
+    { name: "Auto & Transport:Registration (Other)", emoji: "🚗", type: "default" },
+    { name: "Auto & Transport:Registration Fees", emoji: "🚗", type: "default" },
+    { name: "Auto & Transport:Rideshare", emoji: "🚕", type: "travel_other" },
+    { name: "Auto & Transport:Service & Parts", emoji: "🔧", type: "default" },
+    { name: "Auto & Transport:Tolls", emoji: "🛣️", type: "default" },
+    { name: "Cash & ATM:Cash & ATM", emoji: "🏧", type: "default" },
+    { name: "Dining & Drinks:Bars", emoji: "🍻", type: "dining" },
+    { name: "Dining & Drinks:Coffee Shops", emoji: "☕", type: "dining" },
+    { name: "Dining & Drinks:Dining & Drinks (Other)", emoji: "🍽️", type: "dining" },
     { name: "Dining & Drinks:Fast Food", emoji: "🍔", type: "fast_food" },
+    { name: "Dining & Drinks:Food Delivery", emoji: "🥡", type: "dining" },
+    { name: "Dining & Drinks:Restaurants", emoji: "🍽️", type: "dining" },
+    { name: "Education:Software", emoji: "🎓", type: "default" },
+    { name: "Entertainment:Entertainment", emoji: "🎟️", type: "default" },
+    { name: "Fees & Charges:ATM Fee", emoji: "💸", type: "default" },
+    { name: "Fees & Charges:Fees & Charges (Other)", emoji: "💸", type: "default" },
+    { name: "Fees & Charges:Finance Charge", emoji: "💸", type: "default" },
+    { name: "Fees & Charges:Government Payments", emoji: "🏛️", type: "default" },
+    { name: "Fees & Charges:Late Fee", emoji: "💸", type: "default" },
+    { name: "Fees & Charges:Service Fee", emoji: "💸", type: "default" },
+    { name: "Financial:Financial (Other)", emoji: "🏦", type: "default" },
+    { name: "Financial:Financial Advisor", emoji: "📈", type: "default" },
+    { name: "Financial:Life Insurance", emoji: "🛡️", type: "default" },
     { name: "Fitness:Gym", emoji: "🏋️", type: "gym" },
+    { name: "Gifts:Gifts", emoji: "🎁", type: "default" },
     { name: "Groceries:Groceries", emoji: "🛒", type: "groceries" },
+    { name: "Health:Dentist", emoji: "🦷", type: "default" },
+    { name: "Health:Doctor", emoji: "👨‍⚕️", type: "default" },
+    { name: "Health:Eyecare", emoji: "👁️", type: "default" },
+    { name: "Health:Health (Other)", emoji: "⚕️", type: "default" },
+    { name: "Health:Health Insurance", emoji: "🛡️", type: "default" },
+    { name: "Health:Laboratory", emoji: "🔬", type: "default" },
+    { name: "Health:Pharmacy", emoji: "💊", type: "default" },
+    { name: "Health:Vitamins & Supplements", emoji: "💊", type: "default" },
+    { name: "Home:Furnishings", emoji: "🛋️", type: "default" },
+    { name: "Home:Home Improvement", emoji: "🔨", type: "default" },
+    { name: "Home:Home Insurance", emoji: "🛡️", type: "default" },
+    { name: "Home:Home Services", emoji: "🧹", type: "default" },
+    { name: "Home:Landscape", emoji: "🌳", type: "default" },
+    { name: "Home:Mortgage", emoji: "🏠", type: "default" },
+    { name: "Home:Repairs & Maintenance", emoji: "🔧", type: "default" },
+    { name: "Kids:Allowance", emoji: "👶", type: "default" },
+    { name: "Kids:Baby Supplies", emoji: "🍼", type: "default" },
+    { name: "Kids:Kids Health Insurance", emoji: "🛡️", type: "default" },
+    { name: "Legal:Lawyer Fees", emoji: "⚖️", type: "default" },
+    { name: "Legal:Legal (Other)", emoji: "⚖️", type: "default" },
+    { name: "Legal:Parents Allowance", emoji: "👵", type: "default" },
+    { name: "Loans:Loans", emoji: "💳", type: "default" },
+    { name: "Office:Generator Fuel", emoji: "⛽", type: "gas" },
+    { name: "Office:Generator Maintenance", emoji: "🔧", type: "default" },
+    { name: "Office:Office Music", emoji: "🎵", type: "default" },
+    { name: "Office:Programs & Software", emoji: "💻", type: "default" },
     { name: "Office:Software Subscription", emoji: "💻", type: "utilities" },
+    { name: "Personal Care:Hair", emoji: "💇", type: "default" },
+    { name: "Personal Care:Personal Care (Other)", emoji: "💆", type: "default" },
+    { name: "Personal Care:Shallowness", emoji: "💅", type: "default" },
+    { name: "Personal Care:Spa", emoji: "🧖", type: "default" },
+    { name: "Pets:Pet Food & Supplies", emoji: "🐾", type: "default" },
+    { name: "Pets:Pets (Other)", emoji: "🐾", type: "default" },
+    { name: "Pets:Veterinary", emoji: "🩺", type: "default" },
+    { name: "Shopping:Clothing", emoji: "👕", type: "default" },
     { name: "Shopping:Electronics", emoji: "💻", type: "electronics" },
     { name: "Shopping:Hobbies", emoji: "🎨", type: "sporting_goods" },
+    { name: "Shopping:Jewelry", emoji: "💍", type: "default" },
+    { name: "Shopping:Shipping", emoji: "📦", type: "default" },
+    { name: "Shopping:Shopping (Other)", emoji: "🛍️", type: "default" },
+    { name: "Subscriptions:Subscriptions", emoji: "📅", type: "utilities" },
+    { name: "Taxes:Local Tax", emoji: "🧾", type: "default" },
+    { name: "Taxes:Property Tax", emoji: "🧾", type: "default" },
+    { name: "Taxes:State Tax", emoji: "🧾", type: "default" },
+    { name: "Taxes:Taxes (Other)", emoji: "🧾", type: "default" },
     { name: "Travel:Airfare", emoji: "✈️", type: "travel_airfare" },
+    { name: "Travel:Baggage Fee", emoji: "🧳", type: "travel_other" },
     { name: "Travel:Car Rental", emoji: "🚗", type: "travel_car_rental" },
+    { name: "Travel:Car Rental Fuel", emoji: "⛽", type: "gas" },
+    { name: "Travel:Excursions & Tours", emoji: "🗺️", type: "travel_other" },
+    { name: "Travel:Hotels & Lodging", emoji: "🏨", type: "travel_hotel" },
+    { name: "Travel:Restaurants - T", emoji: "🍽️", type: "dining" },
+    { name: "Travel:Taxi - T", emoji: "🚕", type: "travel_other" },
+    { name: "Travel:Travel (Other)", emoji: "🧳", type: "travel_other" },
+    { name: "Utilities:Cable TV", emoji: "📺", type: "utilities" },
+    { name: "Utilities:Cellular Service", emoji: "📱", type: "utilities" },
     { name: "Utilities:Electricity", emoji: "💡", type: "utilities" },
     { name: "Utilities:Internet", emoji: "🌐", type: "utilities" },
     { name: "Utilities:Water", emoji: "💧", type: "utilities" },
     { name: "Yachting:Port Entry & Customs Fees", emoji: "🛂", type: "marina_fees" },
+    { name: "Yachting:Marina Slip Fees", emoji: "⚓", type: "marina_fees" },
     { name: "Yachting:Diesel & Gasoline", emoji: "🛥️", type: "marina_fuel" },
-    { name: "Yachting:Groceries (Costco)", emoji: "🛒", type: "costco" }
+    { name: "Yachting:Lodging (Hotels/Resorts)", emoji: "🏨", type: "travel_hotel" },
+    { name: "Yachting:Groceries (Costco)", emoji: "🛒", type: "costco" },
+    { name: "Yachting:Restaurants", emoji: "🍽️", type: "dining" }
   ];
 
   // Connectivity Badge Logic
