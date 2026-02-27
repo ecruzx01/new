@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Card Maximizer</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0d14;
+      --surface: #11151f;
+      --surface2: #181d2a;
+      --border: rgba(255,255,255,0.07);
+      --border-active: rgba(255,255,255,0.18);
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --text: #e8eaf0;
+      --text-muted: #8892a4;
+      --accent: #3d6cdb;
+      --accent2: #6b9cff;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 20% 10%, rgba(61,108,219,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 80%, rgba(201,168,76,0.08) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .logo-ring {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 22px;
+      box-shadow: 0 0 32px rgba(201,168,76,0.2), 0 0 0 1px rgba(201,168,76,0.15);
+    }
+
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 40%, var(--gold-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      margin-top: 6px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 300;
+    }
+
+    /* Search */
+    .search-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 15px;
+      pointer-events: none;
+    }
+
+    #category-search {
+      width: 100%;
+      padding: 16px 16px 16px 44px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 400;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      letter-spacing: 0.01em;
+    }
+
+    #category-search::placeholder { color: var(--text-muted); }
+    #category-search:focus {
+      border-color: var(--border-active);
+      box-shadow: 0 0 0 3px rgba(61,108,219,0.12);
+    }
+
+    /* Dropdown */
+    .dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0; right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      max-height: 320px;
+      overflow-y: auto;
+      z-index: 100;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    }
+
+    .dropdown.show { display: block; }
+
+    .dropdown::-webkit-scrollbar { width: 4px; }
+    .dropdown::-webkit-scrollbar-track { background: transparent; }
+    .dropdown::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+    .option-group {
+      padding: 10px 16px 6px;
+      font-size: 0.68rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .option-item {
+      padding: 12px 16px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--text);
+      transition: background 0.15s, color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .option-item:hover {
+      background: var(--surface2);
+      color: #fff;
+    }
+
+    .option-item .emoji { font-size: 1rem; }
+
+    /* Sub question */
+    #sub-question {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    #sub-question p {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      font-weight: 500;
+      margin-bottom: 14px;
+    }
+
+    .sub-btn {
+      display: block;
+      width: 100%;
+      padding: 13px 16px;
+      margin-bottom: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 400;
+      color: var(--text);
+      text-align: left;
+      transition: all 0.2s;
+    }
+
+    .sub-btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      transform: translateX(3px);
+    }
+
+    .sub-btn:last-child { margin-bottom: 0; }
+
+    /* Note */
+    .note {
+      display: none;
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 0.83rem;
+      color: #d4a843;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    /* Recommendation area */
+    .reco-area {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .reco-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .reco-label::before, .reco-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Credit Cards */
+    .cc-card {
+      border-radius: 16px;
+      padding: 22px 24px;
+      margin-bottom: 12px;
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .cc-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+    }
+
+    .cc-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .card-rank {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      font-weight: 600;
+      opacity: 0.12;
+      line-height: 1;
+    }
+
+    .card-name {
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      margin-bottom: 6px;
+    }
+
+    .card-perk {
+      font-size: 0.83rem;
+      opacity: 0.8;
+      font-weight: 300;
+      line-height: 1.4;
+    }
+
+    /* Card colors */
+    .bg-costco  { background: linear-gradient(135deg, #004e6e 0%, #0077a8 100%); }
+    .bg-schwab  { background: linear-gradient(135deg, #2a2e38 0%, #3e4352 100%); border: 1px solid rgba(255,255,255,0.1); }
+    .bg-bppr    { background: linear-gradient(135deg, #8b0000 0%, #c0001a 100%); }
+    .bg-aa      { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 1px solid rgba(255,255,255,0.08); }
+    .bg-onepay  { background: linear-gradient(135deg, #3730a3 0%, #4f46e5 100%); }
+    .bg-amazon  { background: linear-gradient(135deg, #13202e 0%, #1e3a5f 100%); }
+    .bg-cashplus { background: linear-gradient(135deg, #001a52 0%, #0033a0 100%); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 28px;
+      font-size: 0.72rem;
+      color: #3d4558;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="logo-ring">💳</div>
+    <h1>Card Maximizer</h1>
+    <p>Smart rewards for every purchase</p>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="category-search" placeholder="Search spending category…" autocomplete="off">
+    <div class="dropdown" id="custom-options-list"></div>
+  </div>
+
+  <div id="sub-question">
+    <p>What's your priority for this rental?</p>
+    <button class="sub-btn" onclick="resolveSub('insurance')">🛡️ Coverage — Primary Insurance up to $1.5M / $75k</button>
+    <button class="sub-btn" onclick="resolveSub('discount')">⭐ Discounted Rate & Elite Status</button>
+    <button class="sub-btn" onclick="resolveSub('cashback')">💰 Maximize Cash Back</button>
+  </div>
+
+  <div id="note-area" class="note"></div>
+
+  <div class="reco-area" id="recommendation-area">
+    <div class="reco-label">Top Recommended Cards</div>
+    <div id="cards-container"></div>
+  </div>
+
+  <div class="footer">Recommendations based on your personal card portfolio</div>
+</div>
+
+<script>
+  const rulesMap = {
+    utilities:       { note: "Quarterly 5% categories cap at $2,000 spend.", cards: [ { name: "U.S. Bank Cash+", perk: "5% cash back (capped) · 1% thereafter", color: "bg-cashplus" }, { name: "OnePay", perk: "1.5% flat cash back", color: "bg-onepay" } ] },
+    gym:             { cards: [ { name: "U.S. Bank Cash+", perk: "5% cash back (if selected)", color: "bg-cashplus" }, { name: "OnePay", perk: "1.5% flat cash back", color: "bg-onepay" } ] },
+    electronics:     { cards: [ { name: "U.S. Bank Cash+", perk: "5% cash back (if selected)", color: "bg-cashplus" }, { name: "Amazon Prime Visa", perk: "5% back when buying on Amazon", color: "bg-amazon" } ] },
+    sporting_goods:  { cards: [ { name: "U.S. Bank Cash+", perk: "5% cash back (if selected)", color: "bg-cashplus" }, { name: "OnePay", perk: "1.5% flat cash back", color: "bg-onepay" } ] },
+    groceries:       { cards: [ { name: "U.S. Bank Cash+", perk: "2% cash back (if selected)", color: "bg-cashplus" }, { name: "OnePay", perk: "1.5% flat cash back", color: "bg-onepay" } ] },
+    fast_food:       { cards: [ { name: "U.S. Bank Cash+", perk: "5% cash back (if selected)", color: "bg-cashplus" }, { name: "Citi Costco Anywhere Visa", perk: "3% cash back", color: "bg-costco" } ] },
+    gas:             { cards: [ { name: "Citi Costco Anywhere Visa", perk: "4% cash back (up to $7k/yr)", color: "bg-costco" }, { name: "OnePay", perk: "1.5% flat · or 3% as monthly category", color: "bg-onepay" } ] },
+    dining:          { cards: [ { name: "Citi Costco Anywhere Visa", perk: "3% cash back", color: "bg-costco" }, { name: "OnePay", perk: "1.5% flat · or 3% as monthly category", color: "bg-onepay" } ] },
+    travel_airfare:  { cards: [ { name: "AMEX Schwab Platinum", perk: "5× points on flights", color: "bg-schwab" }, { name: "Citi AAdvantage Executive", perk: "4× AA miles on American Airlines", color: "bg-aa" } ] },
+    travel_hotel:    { cards: [ { name: "AMEX Schwab Platinum", perk: "5× points on prepaid hotels via Amex Travel", color: "bg-schwab" }, { name: "Citi Costco Anywhere Visa", perk: "3% cash back on travel", color: "bg-costco" } ] },
+    travel_other:    { cards: [ { name: "Citi Costco Anywhere Visa", perk: "3% cash back on travel", color: "bg-costco" }, { name: "AMEX Schwab Platinum", perk: "1× points · No foreign transaction fees", color: "bg-schwab" } ] },
+    travel_car_rental: { requiresSubChoice: true },
+    costco:          { cards: [ { name: "Citi Costco Anywhere Visa", perk: "2% cash back at Costco", color: "bg-costco" }, { name: "OnePay", perk: "1.5% flat cash back", color: "bg-onepay" } ] },
+    walmart:         { cards: [ { name: "OnePay", perk: "3–5% cash back (with Walmart+)", color: "bg-onepay" }, { name: "Citi Costco Anywhere Visa", perk: "1% cash back", color: "bg-costco" } ] },
+    marina_fuel:     { note: "⚠️ Marina fuel often codes as MCC 5932 (Marinas), not a gas station — standard fuel multipliers typically won't apply. A flat-rate card is the safest choice.", cards: [ { name: "OnePay", perk: "1.5% flat cash back on all transactions", color: "bg-onepay" }, { name: "BPPR AAdvantage MC Black", perk: "1× AA mile · Builds loyalty status", color: "bg-bppr" } ] },
+    marina_fees:     { cards: [ { name: "AMEX Schwab Platinum", perk: "No foreign transaction fees", color: "bg-schwab" }, { name: "OnePay", perk: "1.5% flat cash back", color: "bg-onepay" } ] },
+    default:         { cards: [ { name: "OnePay", perk: "1.5% flat cash back", color: "bg-onepay" }, { name: "BPPR AAdvantage MC Black", perk: "1× AA mile on everyday purchases", color: "bg-bppr" } ] }
+  };
+
+  const carRentalSubChoices = {
+    insurance: [ { name: "BPPR Visa Infinite", perk: "Primary coverage up to 31 days (decline CDW/LDW)", color: "bg-bppr" }, { name: "BPPR AAdvantage MC Black", perk: "MasterRental primary coverage up to $75k", color: "bg-bppr" } ],
+    discount:  [ { name: "AMEX Schwab Platinum", perk: "Hertz President's Circle · Avis & National elite status", color: "bg-schwab" }, { name: "Citi AAdvantage Executive", perk: "Avis/Budget discounts · Up to $120 back", color: "bg-aa" } ],
+    cashback:  [ { name: "Citi Costco Anywhere Visa", perk: "3% cash back on travel & rentals", color: "bg-costco" }, { name: "OnePay", perk: "1.5% flat cash back", color: "bg-onepay" } ]
+  };
+
+  const allCategories = [
+    { name: "Auto & Transport:Car Insurance", emoji: "🚗", type: "default" },
+    { name: "Auto & Transport:Gas & Fuel", emoji: "⛽", type: "gas" },
+    { name: "Auto & Transport:Parking", emoji: "🅿️", type: "default" },
+    { name: "Auto & Transport:Registration (Other)", emoji: "🚗", type: "default" },
+    { name: "Auto & Transport:Registration Fees", emoji: "🚗", type: "default" },
+    { name: "Auto & Transport:Rideshare", emoji: "🚕", type: "travel_other" },
+    { name: "Auto & Transport:Service & Parts", emoji: "🔧", type: "default" },
+    { name: "Auto & Transport:Tolls", emoji: "🛣️", type: "default" },
+    { name: "Cash & ATM:Cash & ATM", emoji: "🏧", type: "default" },
+    { name: "Dining & Drinks:Bars", emoji: "🍻", type: "dining" },
+    { name: "Dining & Drinks:Coffee Shops", emoji: "☕", type: "dining" },
+    { name: "Dining & Drinks:Dining & Drinks (Other)", emoji: "🍽️", type: "dining" },
+    { name: "Dining & Drinks:Fast Food", emoji: "🍔", type: "fast_food" },
+    { name: "Dining & Drinks:Food Delivery", emoji: "🥡", type: "dining" },
+    { name: "Dining & Drinks:Restaurants", emoji: "🍽️", type: "dining" },
+    { name: "Education:Software", emoji: "🎓", type: "default" },
+    { name: "Entertainment:Entertainment", emoji: "🎟️", type: "default" },
+    { name: "Fees & Charges:ATM Fee", emoji: "💸", type: "default" },
+    { name: "Fees & Charges:Fees & Charges (Other)", emoji: "💸", type: "default" },
+    { name: "Fees & Charges:Finance Charge", emoji: "💸", type: "default" },
+    { name: "Fees & Charges:Government Payments", emoji: "🏛️", type: "default" },
+    { name: "Fees & Charges:Late Fee", emoji: "💸", type: "default" },
+    { name: "Fees & Charges:Service Fee", emoji: "💸", type: "default" },
+    { name: "Financial:Financial (Other)", emoji: "🏦", type: "default" },
+    { name: "Financial:Financial Advisor", emoji: "📈", type: "default" },
+    { name: "Financial:Life Insurance", emoji: "🛡️", type: "default" },
+    { name: "Fitness:Gym", emoji: "🏋️", type: "gym" },
+    { name: "Gifts:Gifts", emoji: "🎁", type: "default" },
+    { name: "Groceries:Groceries", emoji: "🛒", type: "groceries" },
+    { name: "Health:Dentist", emoji: "🦷", type: "default" },
+    { name: "Health:Doctor", emoji: "👨‍⚕️", type: "default" },
+    { name: "Health:Eyecare", emoji: "👁️", type: "default" },
+    { name: "Health:Health (Other)", emoji: "⚕️", type: "default" },
+    { name: "Health:Health Insurance", emoji: "🛡️", type: "default" },
+    { name: "Health:Laboratory", emoji: "🔬", type: "default" },
+    { name: "Health:Pharmacy", emoji: "💊", type: "default" },
+    { name: "Health:Vitamins & Supplements", emoji: "💊", type: "default" },
+    { name: "Home:Furnishings", emoji: "🛋️", type: "default" },
+    { name: "Home:Home Improvement", emoji: "🔨", type: "default" },
+    { name: "Home:Home Insurance", emoji: "🛡️", type: "default" },
+    { name: "Home:Home Services", emoji: "🧹", type: "default" },
+    { name: "Home:Landscape", emoji: "🌳", type: "default" },
+    { name: "Home:Mortgage", emoji: "🏠", type: "default" },
+    { name: "Home:Repairs & Maintenance", emoji: "🔧", type: "default" },
+    { name: "Kids:Allowance", emoji: "👶", type: "default" },
+    { name: "Kids:Baby Supplies", emoji: "🍼", type: "default" },
+    { name: "Kids:Kids Health Insurance", emoji: "🛡️", type: "default" },
+    { name: "Legal:Lawyer Fees", emoji: "⚖️", type: "default" },
+    { name: "Legal:Legal (Other)", emoji: "⚖️", type: "default" },
+    { name: "Legal:Parents Allowance", emoji: "👵", type: "default" },
+    { name: "Loans:Loans", emoji: "💳", type: "default" },
+    { name: "Office:Generator Fuel", emoji: "⛽", type: "gas" },
+    { name: "Office:Generator Maintenance", emoji: "🔧", type: "default" },
+    { name: "Office:Office Music", emoji: "🎵", type: "default" },
+    { name: "Office:Programs & Software", emoji: "💻", type: "default" },
+    { name: "Office:Software Subscription", emoji: "💻", type: "utilities" },
+    { name: "Personal Care:Hair", emoji: "💇", type: "default" },
+    { name: "Personal Care:Personal Care (Other)", emoji: "💆", type: "default" },
+    { name: "Personal Care:Shallowness", emoji: "💅", type: "default" },
+    { name: "Personal Care:Spa", emoji: "🧖", type: "default" },
+    { name: "Pets:Pet Food & Supplies", emoji: "🐾", type: "default" },
+    { name: "Pets:Pets (Other)", emoji: "🐾", type: "default" },
+    { name: "Pets:Veterinary", emoji: "🩺", type: "default" },
+    { name: "Shopping:Clothing", emoji: "👕", type: "default" },
+    { name: "Shopping:Electronics", emoji: "💻", type: "electronics" },
+    { name: "Shopping:Hobbies", emoji: "🎨", type: "sporting_goods" },
+    { name: "Shopping:Jewelry", emoji: "💍", type: "default" },
+    { name: "Shopping:Shipping", emoji: "📦", type: "default" },
+    { name: "Shopping:Shopping (Other)", emoji: "🛍️", type: "default" },
+    { name: "Subscriptions:Subscriptions", emoji: "📅", type: "utilities" },
+    { name: "Taxes:Local Tax", emoji: "🧾", type: "default" },
+    { name: "Taxes:Property Tax", emoji: "🧾", type: "default" },
+    { name: "Taxes:State Tax", emoji: "🧾", type: "default" },
+    { name: "Taxes:Taxes (Other)", emoji: "🧾", type: "default" },
+    { name: "Travel:Airfare", emoji: "✈️", type: "travel_airfare" },
+    { name: "Travel:Baggage Fee", emoji: "🧳", type: "travel_other" },
+    { name: "Travel:Car Rental", emoji: "🚗", type: "travel_car_rental" },
+    { name: "Travel:Car Rental Fuel", emoji: "⛽", type: "gas" },
+    { name: "Travel:Excursions & Tours", emoji: "🗺️", type: "travel_other" },
+    { name: "Travel:Hotels & Lodging", emoji: "🏨", type: "travel_hotel" },
+    { name: "Travel:Restaurants - T", emoji: "🍽️", type: "dining" },
+    { name: "Travel:Taxi - T", emoji: "🚕", type: "travel_other" },
+    { name: "Travel:Travel (Other)", emoji: "🧳", type: "travel_other" },
+    { name: "Utilities:Cable TV", emoji: "📺", type: "utilities" },
+    { name: "Utilities:Cellular Service", emoji: "📱", type: "utilities" },
+    { name: "Utilities:Electricity", emoji: "💡", type: "utilities" },
+    { name: "Utilities:Internet", emoji: "🌐", type: "utilities" },
+    { name: "Utilities:Water", emoji: "💧", type: "utilities" },
+    { name: "Yachting:Port Entry & Customs Fees", emoji: "🛂", type: "marina_fees" },
+    { name: "Yachting:Marina Slip Fees", emoji: "⚓", type: "marina_fees" },
+    { name: "Yachting:Diesel & Gasoline", emoji: "🛥️", type: "marina_fuel" },
+    { name: "Yachting:Lodging (Hotels/Resorts)", emoji: "🏨", type: "travel_hotel" },
+    { name: "Yachting:Groceries (Costco)", emoji: "🛒", type: "costco" },
+    { name: "Yachting:Restaurants", emoji: "🍽️", type: "dining" }
+  ];
+
+  // Build grouped dropdown
+  const searchInput = document.getElementById('category-search');
+  const optionsList = document.getElementById('custom-options-list');
+
+  const groupedCategories = {};
+  allCategories.forEach((cat, index) => {
+    const [group, ...rest] = cat.name.split(':');
+    const item = rest.join(':').trim() || group.trim();
+    if (!groupedCategories[group]) groupedCategories[group] = [];
+    groupedCategories[group].push({ ...cat, cleanName: item, originalIndex: index });
+  });
+
+  Object.keys(groupedCategories).forEach(groupName => {
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'option-group';
+    groupDiv.textContent = groupName;
+    optionsList.appendChild(groupDiv);
+
+    groupedCategories[groupName].forEach(item => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'option-item';
+      itemDiv.innerHTML = `<span class="emoji">${item.emoji}</span>${item.cleanName}`;
+      itemDiv.setAttribute('data-search', `${groupName} ${item.cleanName}`.toLowerCase());
+      itemDiv.addEventListener('click', e => {
+        e.stopPropagation();
+        searchInput.value = `${item.emoji}  ${item.cleanName}`;
+        optionsList.classList.remove('show');
+        handleSelection(item.originalIndex);
+      });
+      optionsList.appendChild(itemDiv);
+    });
+  });
+
+  function filterOptions(term) {
+    term = term.toLowerCase();
+    let currentGroup = null, groupHasVisible = false;
+    Array.from(optionsList.children).forEach(el => {
+      if (el.classList.contains('option-group')) {
+        if (currentGroup) currentGroup.style.display = groupHasVisible ? '' : 'none';
+        currentGroup = el; groupHasVisible = false;
+      } else {
+        const match = (el.getAttribute('data-search') || '').includes(term);
+        el.style.display = match ? '' : 'none';
+        if (match) groupHasVisible = true;
+      }
+    });
+    if (currentGroup) currentGroup.style.display = groupHasVisible ? '' : 'none';
+  }
+
+  searchInput.addEventListener('input', e => filterOptions(e.target.value));
+  searchInput.addEventListener('click', e => {
+    e.stopPropagation();
+    optionsList.classList.add('show');
+    filterOptions(searchInput.value);
+  });
+  document.addEventListener('click', e => {
+    if (!optionsList.contains(e.target) && e.target !== searchInput)
+      optionsList.classList.remove('show');
+  });
+
+  function handleSelection(index) {
+    const item = allCategories[index];
+    const rule = rulesMap[item.type] || rulesMap.default;
+
+    document.getElementById('note-area').style.display = 'none';
+    document.getElementById('recommendation-area').style.display = 'none';
+    document.getElementById('sub-question').style.display = 'none';
+
+    if (rule.requiresSubChoice) {
+      document.getElementById('sub-question').style.display = 'block';
+    } else {
+      if (rule.note) {
+        document.getElementById('note-area').textContent = rule.note;
+        document.getElementById('note-area').style.display = 'block';
+      }
+      renderCards(rule.cards);
+    }
+  }
+
+  function resolveSub(choice) {
+    document.getElementById('sub-question').style.display = 'none';
+    renderCards(carRentalSubChoices[choice]);
+  }
+
+  function renderCards(cards) {
+    const container = document.getElementById('cards-container');
+    container.innerHTML = '';
+    cards.forEach((c, i) => {
+      const div = document.createElement('div');
+      div.className = `cc-card ${c.color}`;
+      div.style.animationDelay = `${i * 80}ms`;
+      div.style.animation = 'fadeIn 0.35s ease both';
+      div.innerHTML = `
+        <div class="card-rank">${i + 1}</div>
+        <div class="card-name">${c.name}</div>
+        <div class="card-perk">${c.perk}</div>
+      `;
+      container.appendChild(div);
+    });
+    document.getElementById('recommendation-area').style.display = 'block';
+  }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>

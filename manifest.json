@@ -1,0 +1,17 @@
+{
+  "name": "Card Maximizer",
+  "short_name": "CardMax",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0d14",
+  "theme_color": "#0a0d14",
+  "description": "Smart credit card recommendations based on spending categories.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/438/438526.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
